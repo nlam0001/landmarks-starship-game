@@ -23,8 +23,8 @@ def main():
         game.dibujar()
 
         # 3. Mostrar cámara para referencia
-        cv2.putText(frame, f"IA GESTO: {gesto}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-        cv2.imshow("Control de IA", frame)
+        cv2.putText(frame, f"GESTO: {gesto}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+        cv2.imshow("Detector de gestos", frame)
 
         # Salidas estándar
         if cv2.waitKey(1) & 0xFF == ord('q'):
