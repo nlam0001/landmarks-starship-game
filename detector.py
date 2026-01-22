@@ -9,7 +9,7 @@ class GestureManager:
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
             max_num_hands=1,
-            min_detection_confidence=0.8, # Aumentamos para mayor estabilidad
+            min_detection_confidence=0.8,
             min_tracking_confidence=0.5
         )
 
@@ -20,7 +20,7 @@ class GestureManager:
 
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                # Dibujar esqueleto de la mano en el feed de cámara
+                # Dibuja esqueleto de la mano en el feed de cámara
                 self.mp_draw.draw_landmarks(frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
                 gesture_name = self.analyze_landmarks(hand_landmarks.landmark)
                 
@@ -30,8 +30,7 @@ class GestureManager:
         """
         Determina el gesto analizando la posición relativa de los 21 puntos de la mano.
         """
-        # --- ESTADO DE LOS DEDOS (Punta vs Nudillo) ---
-        # En MediaPipe Y disminuye hacia arriba
+        #DEDOS EXTENDIDOS
         index_out  = lm[8].y < lm[6].y
         middle_out = lm[12].y < lm[10].y
         ring_out   = lm[16].y < lm[14].y

@@ -14,15 +14,14 @@ def main():
         if not success: break
         frame = cv2.flip(frame, 1)
 
-        # 1. Obtener gesto de la IA
+        # Obtiene el gesto de la cámara
         gesto, frame = detector.get_gesture(frame)
         
-        # 2. Actualizar lógica del juego
-        # Si el juego devuelve False en alguna parte, cerramos
+        # Lógica del juego
         game.actualizar(gesto)
         game.dibujar()
 
-        # 3. Mostrar cámara para referencia
+        # Mostrar cámara para referencia
         cv2.putText(frame, f"GESTO: {gesto}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
         cv2.imshow("Detector de gestos", frame)
 
