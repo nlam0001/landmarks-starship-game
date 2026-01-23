@@ -1,0 +1,24 @@
+# --- Entornos Virtuales (MUY IMPORTANTE) ---
+env_ejecutable/
+env/
+venv/
+.env
+
+# --- PyInstaller (Archivos temporales de compilación) ---
+build/
+dist/
+*.spec
+
+# --- Python (Caché y archivos generados) ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Multimedia (Opcional) ---
+# *.mp3
+# *.wav
+# *.png
+
+# --- Configuración de Editores ---
+.vscode/
+.idea/

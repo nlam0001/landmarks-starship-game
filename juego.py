@@ -1,6 +1,16 @@
 import pygame
 import random
 import sys
+import os
+
+# --- FUNCIÓN CRÍTICA PARA EL EXE ---
+def resource_path(relative_path):
+    """ Obtiene la ruta absoluta para recursos, funciona para dev y para PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 # Colores Sci-Fi
 NEON_BLUE = (0, 255, 255)
@@ -16,32 +26,30 @@ RED = (255, 0, 0)
 class SpaceGame:
     def __init__(self):
         pygame.init()
-        pygame.mixer.init()  # Inicializa el mezclador de audio
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode((800, 600))
         self.clock = pygame.time.Clock()
         
-        # Carga de imágenes
+        # Carga de imágenes usando resource_path
         try:
-            self.img_nave = pygame.image.load("nave.png").convert_alpha()
+            self.img_nave = pygame.image.load(resource_path("nave.png")).convert_alpha()
             self.img_nave = pygame.transform.scale(self.img_nave, (55, 45))
-            self.img_asteroide = pygame.image.load("asteroide.png").convert_alpha()
+            self.img_asteroide = pygame.image.load(resource_path("asteroide.png")).convert_alpha()
             self.img_asteroide = pygame.transform.scale(self.img_asteroide, (40, 40))
         except:
             self.img_nave = None
             self.img_asteroide = None
 
-        # Carga de sonidos
+        # Carga de sonidos usando resource_path
         try:
-            # Música de fondo
-            pygame.mixer.music.load("arcade_music.mp3")
-            pygame.mixer.music.set_volume(0.3) # Volumen al 30%
-            pygame.mixer.music.play(-1) # El parámetro -1 hace que se repita infinitamente
+            pygame.mixer.music.load(resource_path("arcade_music.mp3"))
+            pygame.mixer.music.set_volume(0.3)
+            pygame.mixer.music.play(-1)
             
-            # Efecto de Láser
-            self.snd_disparo = pygame.mixer.Sound("laser_shoot.wav")
+            self.snd_disparo = pygame.mixer.Sound(resource_path("laser_shoot.wav"))
             self.snd_disparo.set_volume(0.5)
         except Exception as e:
-            print(f"Aviso de Audio: Revisa que arcade_music.mp3 y laser_shoot.wav existan. Error: {e}")
+            print(f"Error de Audio: {e}")
             self.snd_disparo = None
 
         self.font_main = pygame.font.SysFont("Consolas", 14, bold=True)
@@ -53,23 +61,22 @@ class SpaceGame:
         self.reset_game()
 
     def reset_game(self):
-        # Reiniciar música si se había detenido en el Game Over
         if not pygame.mixer.music.get_busy():
-            pygame.mixer.music.play(-1)
-            pygame.mixer.music.set_volume(0.3)
-
+            try:
+                pygame.mixer.music.play(-1)
+            except:
+                pass
         self.stars = [[random.randint(0, 800), random.randint(0, 500), random.random() * 2] for _ in range(60)]
         self.nave_rect = pygame.Rect(100, 250, 50, 40)
         self.puntos = 0
         self.energia = 100
-        self.vidas = 3 # Iniciamos con 3
+        self.vidas = 3
         self.estado = "None"
         self.asteroides = []
         self.balas = []
         self.playing = True
         self.msg_alerta = ""
         self.msg_timer = 0
-
         self.hud_items = [
             ("Pointing_Up", "SUBIR", "☝️", NEON_BLUE),
             ("Open_Palm", "ESCUDO", "✋", NEON_PINK),
@@ -89,11 +96,9 @@ class SpaceGame:
             msg = self.font_big.render("MISION FALLIDA", True, RED)
             score = self.font_main.render(f"PUNTOS FINALES: {self.puntos}", True, WHITE)
             instr = self.font_main.render("PRESIONA 'R' PARA REINTENTAR O 'Q' PARA SALIR", True, GREEN)
-            
             self.screen.blit(msg, (400 - msg.get_width()//2, 200))
             self.screen.blit(score, (400 - score.get_width()//2, 300))
             self.screen.blit(instr, (400 - instr.get_width()//2, 400))
-            
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
@@ -105,133 +110,85 @@ class SpaceGame:
         if not self.playing: return
         self.estado = gesto
         ahora = pygame.time.get_ticks()
-
-        # GESTO DE PAUSA (OK_Sign)
         if gesto == "OK_Sign":
-            if not self.pausado:
-                pygame.mixer.music.pause() # Pausa la música de fondo
+            if not self.pausado: pygame.mixer.music.pause()
             self.pausado = True
             return
         else:
-            if self.pausado:
-                pygame.mixer.music.unpause() # Reanuda la música de fondo
+            if self.pausado: pygame.mixer.music.unpause()
             self.pausado = False
-
-        # MOVIMIENTO
         if gesto == "Pointing_Up": self.nave_rect.y -= 9
         elif gesto == "Thumb_Down": self.nave_rect.y += 10
-        else: self.nave_rect.y += 3 # Gravedad
-        
+        else: self.nave_rect.y += 3
         self.nave_rect.clamp_ip(pygame.Rect(0, 0, 800, 510))
-
-        # ATAQUE
         if gesto == "Victory" and ahora - self.ultimo_disparo > 250:
             self.balas.append(pygame.Rect(self.nave_rect.right, self.nave_rect.centery, 15, 5))
-            if self.snd_disparo: self.snd_disparo.play() # DISPARO!
+            if self.snd_disparo: self.snd_disparo.play()
             self.ultimo_disparo = ahora
-        
         if gesto == "Rock_ON" and ahora - self.ultimo_disparo > 500:
             for dy in [-20, 0, 20]:
                 self.balas.append(pygame.Rect(self.nave_rect.right, self.nave_rect.centery + dy, 15, 5))
-            if self.snd_disparo: self.snd_disparo.play() # DISPARO!
+            if self.snd_disparo: self.snd_disparo.play()
             self.ultimo_disparo = ahora
-
-        # ENERGIA Y BOMBA
         if gesto == "Closed_Fist" and self.energia < 100: self.energia += 0.5
         if gesto == "Thumb_Up" and self.energia < 100: self.energia += 1.5
         if gesto == "ILoveYou" and self.energia > 80:
             self.asteroides = []; self.energia -= 80
             self.msg_alerta = "¡BOMBA ACTIVADA!"; self.msg_timer = ahora
-
-        # LOGICA DE OBJETOS
         if random.randint(1, 30) == 1:
             self.asteroides.append(pygame.Rect(800, random.randint(0, 470), 40, 40))
-
-        # ASTEROIDES
         for a in self.asteroides[:]:
             a.x -= 7
-            # Colisión con la Nave
             if self.nave_rect.colliderect(a):
-                if gesto != "Open_Palm":
-                    self.energia -= 34
-                if a in self.asteroides:
-                    self.asteroides.remove(a)
-            # Salida de pantalla
-            elif a.x < -50: 
-                if a in self.asteroides:
-                    self.asteroides.remove(a)
-
-        # BALAS
+                if gesto != "Open_Palm": self.energia -= 34
+                if a in self.asteroides: self.asteroides.remove(a)
+            elif a.x < -50:
+                if a in self.asteroides: self.asteroides.remove(a)
         for b in self.balas[:]:
             b.x += 15
-            # Salida de pantalla
-            if b.x > 800: 
-                if b in self.balas:
-                    self.balas.remove(b)
-                continue 
-
-            # Colisión Bala vs Asteroide
+            if b.x > 800:
+                if b in self.balas: self.balas.remove(b)
+                continue
             for a in self.asteroides[:]:
                 if b.colliderect(a):
                     if a in self.asteroides and b in self.balas:
                         self.asteroides.remove(a)
                         self.balas.remove(b)
                         self.puntos += 10
-                        break # esta bala ya no existe, dejamos de buscar
-
-        # REVISAR VIDAS
+                        break
         if self.energia <= 0:
             self.vidas -= 1
             self.energia = 100
             self.msg_alerta = f"¡VIDA PERDIDA! QUEDAN {self.vidas}"
             self.msg_timer = ahora
-            if self.vidas == 0: # Cuando llega a 0 exactamente
+            if self.vidas == 0:
                 self.playing = False
-                pygame.mixer.music.stop() # Detenemos música al morir
+                pygame.mixer.music.stop()
 
     def dibujar(self):
-        # Si ya no estamos jugando, ir a pantalla Game Over
         if not self.playing:
-            if self.show_game_over(): 
-                self.reset_game()
-            else: 
-                pygame.quit(); sys.exit()
-
+            if self.show_game_over(): self.reset_game()
+            else: pygame.quit(); sys.exit()
         self.screen.fill(DEEP_SPACE)
-        # Estrellas
         for s in self.stars:
             s[0] -= s[2]
             if s[0] < 0: s[0] = 800
             pygame.draw.circle(self.screen, (100, 100, 150), (int(s[0]), int(s[1])), 1)
-
-        # Nave e Imagen
-        if self.img_nave:
-            self.screen.blit(self.img_nave, self.nave_rect)
-        else:
-            pygame.draw.polygon(self.screen, NEON_BLUE, [self.nave_rect.topleft, self.nave_rect.bottomleft, self.nave_rect.midright])
-
-        # Escudo
+        if self.img_nave: self.screen.blit(self.img_nave, self.nave_rect)
+        else: pygame.draw.polygon(self.screen, NEON_BLUE, [self.nave_rect.topleft, self.nave_rect.bottomleft, self.nave_rect.midright])
         if self.estado == "Open_Palm":
             pygame.draw.circle(self.screen, NEON_PINK, self.nave_rect.center, 55, 2)
-
-        # Asteroides
         for a in self.asteroides:
             if self.img_asteroide: self.screen.blit(self.img_asteroide, a)
             else: pygame.draw.rect(self.screen, (120, 120, 130), a, border_radius=5)
-
-        # Balas
         for b in self.balas: pygame.draw.rect(self.screen, YELLOW, b)
-
-        # HUD Superior
         txt_score = self.font_main.render(f"PUNTOS: {self.puntos} | VIDAS: {self.vidas}", True, WHITE)
         self.screen.blit(txt_score, (15, 15))
         pygame.draw.rect(self.screen, RED, (15, 40, 100, 10))
         pygame.draw.rect(self.screen, GREEN, (15, 40, max(0, self.energia), 10))
-
         if self.pausado:
             p_txt = self.font_big.render("PAUSA", True, WHITE)
             self.screen.blit(p_txt, (400 - p_txt.get_width()//2, 250))
-
         self.draw_hud_visual()
         pygame.display.flip()
         self.clock.tick(60)

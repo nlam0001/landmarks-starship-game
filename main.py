@@ -3,10 +3,24 @@ from detector import GestureManager
 from juego import SpaceGame
 import pygame
 import sys
+import os 
+
+def resource_path(relative_path):
+    """ Función necesaria para que el .exe encuentre los archivos (imágenes/sonidos) """
+    try:
+        
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 def main():
+    # Inicia Pygame antes para evitar errores de carga
+    pygame.init()
+    
     cap = cv2.VideoCapture(0)
     detector = GestureManager()
+
     game = SpaceGame()
 
     while cap.isOpened():
