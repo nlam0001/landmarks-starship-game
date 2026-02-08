@@ -8,6 +8,7 @@ venv/
 build/
 dist/
 *.spec
+*.zip
 
 # --- Python (Caché y archivos generados) ---
 __pycache__/
