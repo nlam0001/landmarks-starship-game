@@ -4,7 +4,7 @@ import threading
 class VoiceManager:
     def __init__(self):
         self.recognizer = sr.Recognizer()
-        self.recognizer.pause_threshold = 0.7 # Tiempo de pausa para considerar el final de una frase
+        self.recognizer.pause_threshold = 0.7    # Tiempo de pausa para considerar el final de una frase
         self.recognizer.non_speaking_duration = 0.4 # Duración sin hablar antes de finalizar
         self.comando = "None"
         # Iniciamos el hilo para que escuche en segundo plano
@@ -29,9 +29,9 @@ class VoiceManager:
                     elif "pausa" in texto:
                         self.comando = "OK_Sign"
                     elif "sube" in texto:
-                        self.comando = "Thumbs_Up"
+                        self.comando = "Pointing_Up"
                     elif "baja" in texto:
-                        self.comando = "Thumbs_Down"
+                        self.comando = "Thumb_Down"
                     elif "escudo" in texto:
                         self.comando = "Open_Palm"
                         
