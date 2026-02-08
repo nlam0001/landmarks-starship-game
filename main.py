@@ -1,6 +1,7 @@
 import cv2
 from detector import GestureManager
 from juego import SpaceGame
+from escuchador import VoiceManager
 import pygame
 import sys
 import os 
@@ -22,6 +23,7 @@ def main():
     detector = GestureManager()
 
     game = SpaceGame()
+    voice_manager = VoiceManager()
 
     while cap.isOpened():
         success, frame = cap.read()
@@ -31,6 +33,11 @@ def main():
         # Obtiene el gesto de la cámara
         gesto, frame = detector.get_gesture(frame)
         
+        # Obtiene el comando de voz
+        comando_voz = voice_manager.get_command()
+        if comando_voz != "None":
+            gesto = comando_voz # Prioriza comando de voz si hay
+
         # Lógica del juego
         game.actualizar(gesto)
         game.dibujar()
